@@ -5,6 +5,11 @@ import { fileURLToPath } from 'url';
 import { VertexAI } from '@google-cloud/aiplatform';
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 
+// --- START: DEBUGGING LOGS ---
+console.log("Server starting up...");
+console.log(`GCLOUD_PROJECT environment variable is: ${process.env.GCLOUD_PROJECT}`);
+// --- END: DEBUGGING LOGS ---
+
 // --- Server & Path Setup ---
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -12,8 +17,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Google Cloud Vertex AI Setup ---
-const project = process.env.GCLOUD_PROJECT;
-const location = 'us-central1';
+const project = process.env.GCLOUD_PROJECT; // Your Google Cloud project ID
+const location = 'us-central1'; // Or your preferred location
 
 const vertex_ai = new VertexAI({ project: project, location: location });
 const ttsClient = new TextToSpeechClient();
@@ -26,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'dist')));
 
 
 // --- API Endpoints ---
-
+// [ ... the rest of your API code remains unchanged ... ]
 // 1. Analyze Script
 app.post('/api/analyze-script', async (req, res) => {
     const { script, timingRule } = req.body;
@@ -72,8 +77,7 @@ app.post('/api/generate-image', async (req, res) => {
 app.post('/api/generate-speech', async (req, res) => {
     const { scene, voice } = req.body;
     if (!scene || !voice) return res.status(400).json({ error: 'Scene and voice are required.' });
-
-    // Voice mapping from preset to Google Cloud TTS voice names
+    
     const voiceMap = {
         "Deep Male (Fenrir)": "en-US-Wavenet-D",
         "Fast/Crisp Male (Puck)": "en-US-Wavenet-B",
