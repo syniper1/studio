@@ -1,52 +1,55 @@
-import express from 'express';
+// --- START: Paranoid Debugging Server ---
+console.log("--- Log 0: server.js execution started. ---");
 
-// --- START: Bulletproof Startup Code ---
+process.on('uncaughtException', (err, origin) => {
+  console.error(`--- FATAL UNCAUGHT EXCEPTION --- Origin: ${origin}`);
+  console.error(err);
+  process.exit(1);
+});
 
-let vertex_ai;
-let ttsClient;
+let server;
 
 try {
-  console.log("--- DEBUG: Stage 1 - Attempting to import Google Cloud libraries. ---");
+  console.log("--- Log 1: Importing 'express'. ---");
+  const express = await import('express');
+  console.log("--- Log 2: Successfully imported 'express'. ---");
+
+  console.log("--- Log 3: Importing 'path'. ---");
+  const path = await import('path');
+  console.log("--- Log 4: Successfully imported 'path'. ---");
+  
+  console.log("--- Log 5: Importing 'url'. ---");
+  const { fileURLToPath } = await import('url');
+  console.log("--- Log 6: Successfully imported 'url'. ---");
+
+  console.log("--- Log 7: Importing '@google-cloud/aiplatform'. ---");
   const { VertexAI } = await import('@google-cloud/aiplatform');
+  console.log("--- Log 8: Successfully imported '@google-cloud/aiplatform'. ---");
+
+  console.log("--- Log 9: Importing '@google-cloud/text-to-speech'. ---");
   const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
+  console.log("--- Log 10: Successfully imported '@google-cloud/text-to-speech'. ---");
+
+  const app = express.default();
+  const PORT = process.env.PORT || 8080;
   
-  const project = process.env.GCLOUD_PROJECT;
-  const location = 'us-central1';
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
-  console.log(`--- DEBUG: Stage 2 - GCLOUD_PROJECT is '${project}'. Location is '${location}'. ---`);
-  if (!project) {
-    throw new Error("GCLOUD_PROJECT environment variable is not set or is undefined. This is a fatal error.");
-  }
-
-  console.log("--- DEBUG: Stage 3 - Initializing VertexAI client. ---");
-  vertex_ai = new VertexAI({ project, location });
-
-  console.log("--- DEBUG: Stage 4 - Initializing TextToSpeechClient. ---");
-  ttsClient = new TextToSpeechClient();
+  app.use(express.default.static(path.join(__dirname, 'dist')));
   
-  console.log("--- DEBUG: Stage 5 - All Google Cloud clients initialized successfully. ---");
+  app.get('/', (req, res) => {
+    res.status(200).send('Paranoid Debug Server is running. If you see this, the imports were successful.');
+  });
+  
+  server = app.listen(PORT, () => {
+    console.log(`--- SUCCESS: Paranoid Debug Server listening on port ${PORT}. ---`);
+  });
 
 } catch (err) {
-  console.error("--- FATAL STARTUP ERROR ---");
-  console.error("The application crashed during the initialization of Google Cloud clients.");
-  console.error("Below is the specific error message:");
+  console.error("--- FATAL STARTUP CATCH BLOCK ---");
+  console.error("The application crashed during the import/setup phase.");
   console.error(err);
-  
-  // Exit the process with an error code to make the failure obvious.
-  process.exit(1); 
+  process.exit(1);
 }
-
-// --- END: Bulletproof Startup Code ---
-
-
-// --- Standard Express Server Setup ---
-const app = express();
-const PORT = process.env.PORT || 8080;
-
-app.get('/', (req, res) => {
-  res.status(200).send('Application started, but this is the debug server. The real endpoints are disabled.');
-});
-
-app.listen(PORT, () => {
-  console.log(`--- SUCCESS: Debug server is listening on port ${PORT}. ---`);
-});
+// --- END: Paranoid Debugging Server ---
