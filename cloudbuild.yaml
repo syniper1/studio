@@ -1,0 +1,22 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/creator-station:$COMMIT_SHA', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/creator-station:$COMMIT_SHA']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'gcloud'
+  args:
+  - 'run'
+  - 'deploy'
+  - 'creator-station'
+  - '--image'
+  - 'gcr.io/$PROJECT_ID/creator-station:$COMMIT_SHA'
+  - '--region'
+  - 'us-central1' # Change to your preferred region
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated' # Use with caution
+  - '--set-env-vars'
+  - 'GCLOUD_PROJECT=$PROJECT_ID' # Pass project ID to the container
+images:
+- 'gcr.io/$PROJECT_ID/creator-station:$COMMIT_SHA'
