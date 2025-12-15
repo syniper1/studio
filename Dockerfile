@@ -1,25 +1,20 @@
-# Stage 1: Build the React frontend
-FROM node:20-alpine AS builder
+# Use a full-featured base image to ensure all native dependencies are available.
+FROM node:20-bullseye
+
 WORKDIR /app
+
+# Copy package files and install ALL dependencies (including dev) to be safe.
 COPY package.json ./
 RUN npm install
+
+# Copy the rest of the application code
 COPY . .
+
+# Build the React frontend
 RUN npm run build
-
-# Stage 2: Create the production server
-FROM node:20-slim
-WORKDIR /app
-# We need to install all dependencies for the backend, including @google-cloud/aiplatform
-COPY package.json ./
-RUN npm install --omit=dev
-
-# Copy built frontend from the builder stage
-COPY --from=builder /app/dist ./dist
-# Copy server file
-COPY server.js .
 
 # Expose the port the app runs on
 EXPOSE 8080
 
-# Set the entrypoint
+# Start the server
 CMD ["npm", "start"]
