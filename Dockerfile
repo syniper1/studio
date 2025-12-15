@@ -1,20 +1,33 @@
-# Use a full-featured base image to ensure all native dependencies are available.
-FROM node:20-bullseye
-
+# Stage 1: Build the React frontend
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Copy package files and install ALL dependencies (including dev) to be safe.
 COPY package.json ./
+
+# --- FORCE A CLEAN INSTALL ---
+# Clear the npm cache to prevent using stale, broken packages from previous builds.
+RUN npm cache clean --force
+
+# Now install dependencies from scratch
 RUN npm install
 
-# Copy the rest of the application code
 COPY . .
-
-# Build the React frontend
 RUN npm run build
 
-# Expose the port the app runs on
-EXPOSE 8080
+# Stage 2: Create the production server
+FROM node:20-slim
+WORKDIR /app
+COPY package.json ./
 
-# Start the server
+# --- FORCE A CLEAN INSTALL on the production image as well ---
+RUN npm cache clean --force
+
+# Only install production dependencies
+RUN npm install --omit=dev
+
+# Copy built frontend from the builder stage
+COPY --from=builder /app/dist ./dist
+# Copy the server
+COPY server.js .
+
+EXPOSE 8080
 CMD ["npm", "start"]
