@@ -1,55 +1,38 @@
-// --- START: Paranoid Debugging Server ---
-console.log("--- Log 0: server.js execution started. ---");
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-process.on('uncaughtException', (err, origin) => {
-  console.error(`--- FATAL UNCAUGHT EXCEPTION --- Origin: ${origin}`);
-  console.error(err);
-  process.exit(1);
+const app = express();
+const PORT = process.env.PORT || 8080;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// --- TEST API ENDPOINT ---
+// This is the only API endpoint. It listens for the call from the frontend.
+app.post('/api/analyze-script', (req, res) => {
+  console.log("--- SUCCESS: The /api/analyze-script route was hit! ---");
+
+  // Send back a successful, hardcoded response.
+  res.status(200).json({
+    scenes: [
+      "This is a test scene from the server.",
+      "If you are seeing this, it means the routing is now working correctly.",
+      "The final problem is in the original server.js file."
+    ]
+  });
 });
 
-let server;
+// --- Serve Frontend for all other GET requests ---
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
-try {
-  console.log("--- Log 1: Importing 'express'. ---");
-  const express = await import('express');
-  console.log("--- Log 2: Successfully imported 'express'. ---");
-
-  console.log("--- Log 3: Importing 'path'. ---");
-  const path = await import('path');
-  console.log("--- Log 4: Successfully imported 'path'. ---");
-  
-  console.log("--- Log 5: Importing 'url'. ---");
-  const { fileURLToPath } = await import('url');
-  console.log("--- Log 6: Successfully imported 'url'. ---");
-
-  console.log("--- Log 7: Importing '@google-cloud/aiplatform'. ---");
-  const { VertexAI } = await import('@google-cloud/aiplatform');
-  console.log("--- Log 8: Successfully imported '@google-cloud/aiplatform'. ---");
-
-  console.log("--- Log 9: Importing '@google-cloud/text-to-speech'. ---");
-  const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
-  console.log("--- Log 10: Successfully imported '@google-cloud/text-to-speech'. ---");
-
-  const app = express.default();
-  const PORT = process.env.PORT || 8080;
-  
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-
-  app.use(express.default.static(path.join(__dirname, 'dist')));
-  
-  app.get('/', (req, res) => {
-    res.status(200).send('Paranoid Debug Server is running. If you see this, the imports were successful.');
-  });
-  
-  server = app.listen(PORT, () => {
-    console.log(`--- SUCCESS: Paranoid Debug Server listening on port ${PORT}. ---`);
-  });
-
-} catch (err) {
-  console.error("--- FATAL STARTUP CATCH BLOCK ---");
-  console.error("The application crashed during the import/setup phase.");
-  console.error(err);
-  process.exit(1);
-}
-// --- END: Paranoid Debugging Server ---
+app.listen(PORT, () => {
+  console.log(`Minimal routing test server listening on port ${PORT}`);
+});
